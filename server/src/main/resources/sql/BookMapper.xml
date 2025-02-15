@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.server.mapper.BookMapper">
+    
+    <!-- 書籍検索 -->
+    <select id="searchBooks" resultType="com.example.server.entity.Book">
+        SELECT id, title, author, isbn, publisher, 
+               publication_year as publicationYear,
+               cover_image as coverImage, status,
+               created_at as createdAt,
+               updated_at as updatedAt
+        FROM books
+        <where>
+            <if test="title != null and title != ''">
+                AND title LIKE CONCAT('%', #{title}, '%')
+            </if>
+            <if test="author != null and author != ''">
+                AND author LIKE CONCAT('%', #{author}, '%')
+            </if>
+            <if test="isbn != null and isbn != ''">
+                AND isbn = #{isbn}
+            </if>
+        </where>
+    </select>
+
+    <!-- 書籍詳細取得 -->
+    <select id="findById" resultType="com.example.server.entity.Book">
+        SELECT id, title, author, isbn, publisher,status
+        FROM books
+        WHERE id = #{id}
+    </select>
+
+    <!-- ISBN重複チェック -->
+    <select id="existsByIsbn" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1 FROM books WHERE isbn = #{isbn}
+        )
+    </select>
+
+    <!-- ISBNで書籍検索 -->
+    <select id="findByIsbn" resultType="com.example.server.entity.Book">
+        SELECT id, title, author, isbn, publisher,
+               publication_year as publicationYear,
+               cover_image as coverImage, status,
+               created_at as createdAt,
+               updated_at as updatedAt
+        FROM books
+        WHERE isbn = #{isbn}
+    </select>
+
+    <!-- 借りている本の取得 -->
+    <select id="findBorrowedBooks" resultType="com.example.server.entity.Book">
+        SELECT b.id, b.title, b.author, b.isbn, b.publisher,
+               b.publication_year as publicationYear,
+               b.cover_image as coverImage, b.status,
+               r.borrowed_at as borrowedAt,
+               r.due_date as dueDate,
+               b.created_at as createdAt,
+               b.updated_at as updatedAt
+        FROM books b
+        JOIN reservations r ON b.id = r.book_id
+        WHERE r.user_id = #{userId}
+        AND r.status = '貸出中'
+        AND r.returned_at IS NULL
+        ORDER BY r.borrowed_at DESC
+    </select>
+
+    <!-- 予約中の本の取得 -->
+    <select id="findReservedBooks" resultType="com.example.server.entity.Book">
+        SELECT b.id, b.title, b.author, b.isbn, b.publisher,
+               b.publication_year as publicationYear,
+               b.cover_image as coverImage, b.status,
+               r.reserved_at as reservedAt,
+               b.created_at as createdAt,
+               b.updated_at as updatedAt
+        FROM books b
+        JOIN reservations r ON b.id = r.book_id
+        WHERE r.user_id = #{userId}
+        AND r.status = '予約中'
+        ORDER BY r.reserved_at DESC
+    </select>
+
+    <!-- 書籍登録 -->
+    <insert id="insert" parameterType="com.example.server.dto.request.BookRequest" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO books (
+            title, author, isbn, publisher,
+            publication_year, cover_image, status
+        ) VALUES (
+            #{title}, #{author}, #{isbn}, #{publisher},
+            #{publicationYear}, #{coverImage}, '貸出可能'
+        )
+    </insert>
+
+    <!-- ステータス更新 -->
+    <update id="updateStatus">
+        UPDATE books
+        SET status = #{status},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+</mapper> 

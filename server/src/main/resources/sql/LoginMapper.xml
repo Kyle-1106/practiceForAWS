@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.server.mapper.LoginMapper">
+    
+    <!-- メールアドレスでユーザーを検索 -->
+    <select id="findByEmail" resultType="com.example.server.entity.User">
+        SELECT id, name, email, password
+        FROM users
+        WHERE email = #{email}
+    </select>
+
+    <!-- リフレッシュトークンの保存 -->
+    <update id="saveRefreshToken">
+        UPDATE users
+        SET refresh_token = #{refreshToken}
+        WHERE id = #{userId}
+    </update>
+
+    <!-- リフレッシュトークンでユーザーを検索 -->
+    <select id="findByRefreshToken" resultType="com.example.server.entity.User">
+        SELECT id, name, email, password
+        FROM users
+        WHERE refresh_token = #{refreshToken}
+    </select>
+
+    <!-- リフレッシュトークンの削除 -->
+    <update id="removeRefreshToken">
+        UPDATE users
+        SET refresh_token = NULL
+        WHERE id = #{userId}
+    </update>
+</mapper> 
