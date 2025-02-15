@@ -1,0 +1,2 @@
+# practiceForAWS
+AWSにデプロイしする用のVueとSpringのサンプルアプリ
